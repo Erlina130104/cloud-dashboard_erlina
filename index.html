@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IoT Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Real-time IoT Dashboard</h1>
+  <canvas id="temperatureChart" width="400" height="150"></canvas>
+  <canvas id="humidityChart" width="400" height="150"></canvas>
+
+  <script>
+    const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+    const humidCtx = document.getElementById('humidityChart').getContext('2d');
+
+    const tempChart = new Chart(tempCtx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Temperature (°C)',
+          data: [],
+          borderWidth: 1,
+          fill: false,
+          borderColor: 'red'
+        }]
+      }
+    });
+
+    const humidChart = new Chart(humidCtx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Humidity (%)',
+          data: [],
+          borderWidth: 1,
+          fill: false,
+          borderColor: 'blue'
+        }]
+      }
+    });
+
+    async function fetchData() {
+      const res = await fetch('http://localhost:5000/data');
+      const data = await res.json();
+      const now = new Date().toLocaleTimeString();
+
+      if (tempChart.data.labels.length > 10) {
+        tempChart.data.labels.shift();
+        tempChart.data.datasets[0].data.shift();
+        humidChart.data.labels.shift();
+        humidChart.data.datasets[0].data.shift();
+      }
+
+      tempChart.data.labels.push(now);
+      tempChart.data.datasets[0].data.push(data.temperature);
+      humidChart.data.labels.push(now);
+      humidChart.data.datasets[0].data.push(data.humidity);
+
+      tempChart.update();
+      humidChart.update();
+    }
+
+    setInterval(fetchData, 3000);
+  </script>
+</body>
+</html>
